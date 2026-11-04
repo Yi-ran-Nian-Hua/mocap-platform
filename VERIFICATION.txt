@@ -1,0 +1,55 @@
+Verified 2026-11-04 on Windows, Python 3.11 64-bit.
+
+Automated: python -m unittest discover -s tests -v -> 18 tests passed.
+JavaScript: node --check static/app.js -> passed.
+Vendor DLL: Git blob SHA-1 and SHA-256 verified; ctypes loading and required exports confirmed.
+Browser: connection, live state, 3D Tracker, recording start/stop, and disconnect/reconnect checked.
+Hardware endpoint: MCAvatar@192.168.1.200 (TCP port 3883 reachable).
+Observed stream: Tracker ID 6, approximately 120 events/sec; 0 application queue drops in the test.
+Capture: recordings/capture_20261104_121906_884037.jsonl
+Capture content: 1 metadata record, 102 hierarchy records, 1217 Tracker records.
+CSV export: 1319 data rows, successfully parsed. No recording error.
+Tracker source frame range in capture: 768587 through 769803 inclusive.
+Subsequent live transmission: skeleton IDs 0 and 1 were received in both source and retarget modes, each with 21 detected joints; 43 Tracker IDs were observed.
+Source skeleton and Tracker hierarchy rendering was visually verified. Marker payloads were not observed, so their hardware path remains unverified.
+Retarget position coordinate space is not verified; it is labelled unknown and retained as raw values.
+Recording samples the vendor cache for skeletons and markers; no general lossless claim is made.
+
+Skeleton capture: recordings/capture_20261104_122113_848739.jsonl
+177675 Tracker records; 2416 skeleton records (604 per ID/mode); 102 hierarchy records.
+CSV export parsed successfully: 540177 data rows. Queue drops: 0.
+The source ZIP excludes local recordings and runtime logs.
+
+2026-11-04 update: ID >= 300 classified as skeleton_joint; raw callback type tracker.
+20 Python tests and 7 Node frontend tests passed; node --check passed.
+Live: 1 rigid body; skeleton joint and marker streams observed.
+Browser: frozen table stayed identical while received-event counter increased; resume restored newer rows.
+Pan shortcuts exercised in browser; right/Shift-drag, no orbit change, and fit reset validated by Node tests.
+Short live capture during freeze: 39 rigid_body, 6431 skeleton_joint, 12 skeleton and 3 marker events; no queue drops.
+
+2026-11-04 hand topology correction: named global S joints connect each finger base to its own model/side wrist and subsequent segments in order. Raw hierarchy remains unchanged.
+10 Node frontend tests and 20 Python tests passed. Real snapshot: 40 active hand edges, no cycles. Missing/ambiguous names do not produce guessed hand edges.
+Browser verified corrected left/right hand geometry; screenshot: ../hand-connections-preview.png.
+
+2026-11-04 preview refresh update: target 60 Hz with request/render elapsed time deducted; panels/table throttled to 250 ms; requests remain sequential, offline retry 500 ms.
+11 Node frontend tests and 20 Python tests passed; JavaScript syntax check passed. Browser reloaded and live streams remained online with 0 reported queue drops. Target rate is not a measured frame-rate guarantee.
+
+2026-11-04 personal calibration preparation: 26 Python +20 Node tests passed; both JavaScript syntax checks passed. Synthetic browser test: manually confirmed left/right wrist mappings, 19 unique frames per 2-second pose, saved/loaded JSON, optional millimetre dimensions, unsaved-edit protection. Final freshness patch rechecked with another 19-frame pose. Side identity/stale required-joint rejection and mapping locks tested.
+Live service restarted with original configuration; API/asset versions verified; no test subject profiles saved in live store. MANO assets/fitting not available; this is calibration-data preparation only.
+
+2026-11-04 performance update: viewport-gated table and scene; reused table rows/cells; no repeated frozen drawing; offscreen polling 4Hz and background 1Hz with active calibration exception. Capture frequency unchanged. 24 Node +26 Python tests passed, syntax checks passed.
+Browser DOM benchmark with current recorded state, 500 rows and 20 changing-coordinate updates including forced layout: before 1438.7ms/130000 new elements; after 501.7ms/6500 new elements (initial allocation only). This is a table workload benchmark, not an end-to-end frame-rate guarantee.
+Live browser verified lazy table (1 placeholder offscreen), marker/all filters (42/500 rows), calibration controls and no console errors.
+
+2026-11-04 rigid visibility option: checkbox hides rigid points/axes and excludes them from fit bounds, preserving data table, capture and frozen-frame operation. 25 Node tests and syntax check passed.
+
+2026-11-04 stale-grey root-cause fix: observed 13s queue backlog with advancing source frames. Batched IPC up to128 events/5ms, lock-free expensive snapshot copying, per-batch recording flush, drain before disconnect generation invalidation. 31 Python tests passed including real Windows spawn queue with4096 recorded events, exact order/timestamps, and concurrent snapshot/ingest test.
+Live after restart: ~20150 events/sec, 10-20ms median named-hand sample age across12s, zero queue drops. Further state check: {"connected": true, "rate": 20079, "drops": 0, "max_hand_age": 0.011823415756225586}. Browser confirms original blue/yellow live colors; stale threshold unchanged.
+
+2026-11-04 MANO live skin implementation:
+50 Python tests and 32 Node tests passed. Verified actual licensed model LBS, canonical joint ordering, mirror correction, surface offset, independent marker driving, bounded PCA pose recovery, stale/invalid states, cancellable workers and export consistency.
+Saved three-pose participant profile reused with marker radius 2.65 mm + base thickness 1 mm. Shared hand shape per side; four independent live pose workers. Approximate surface only; no scan or object-distance reference validation.
+Browser verified blue/yellow meshes, display modes, independent freeze/resume, zoom and pan. Original receiver remained online.
+10-second concurrent live API sample: solver updates 9.46 Hz; median cycle 88.4 ms; median input age 162.2 ms, p95 244.0 ms. These are receiver-content ages, not hardware capture-to-display latency. Valid input samples 302/308; transient missing markers explicitly invalidated. Last sample all four hands/methods valid. Queue dropped counter remained 0 -> 0; receiver ~20012 events/s. No claim of lossless camera frames.
+Export verified finite 778 vertices, 21 joints, five representative skin-tip vertices for each valid stream; separate 1538-triangle topology per side; profile, attachment and source-time provenance retained.
+Local preview snapshot: ../hand-skin-preview.json (personal fitted geometry, excluded from ZIP).

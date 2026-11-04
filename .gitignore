@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+recordings/
+models/
+tracker_log.txt
+*.log
+*.zip
+# Install the upstream vendor binary locally; it is not application source.
+sdk/*.dll

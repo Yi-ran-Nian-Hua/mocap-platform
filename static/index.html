@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>CMAvatar · 动作捕捉工作台</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/hand_skin.css">
+  <script src="/calibration.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script src="/hand_skin.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">⌘</span><div><strong>CMAvatar <span>WORKSPACE</span></strong><small>动作捕捉 · 实时接收工作台</small></div></div>
+    <div id="status" class="status" role="status"><i></i><span>正在读取服务状态</span></div>
+  </header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">MOTION CAPTURE / LOCAL RECEIVER</p><h1>动捕数据工作台</h1><p>骨骼、刚体与标记点，实时查看与本地记录。</p></div><span class="local-label">本地工作台 · 127.0.0.1</span></section>
+    <section class="panel connection" aria-labelledby="connection-heading">
+      <div class="section-heading"><h2 id="connection-heading">数据连接</h2><code id="address">MCAvatar@192.168.1.200</code></div>
+      <form id="connect-form">
+        <label>服务器地址<input id="host" value="192.168.1.200" required autocomplete="off"></label>
+        <label>设备名<input id="device" value="MCAvatar" required autocomplete="off"></label>
+        <label class="short">端口<input id="port" type="number" min="1" max="65535" value="3883" required></label>
+        <label class="human">人体 ID<input id="human-ids" value="0-15" placeholder="0-15 或 0,2,5" required title="逗号分隔 ID，支持范围，如 0-15"></label>
+        <label class="short">轮询 / Hz<input id="poll-hz" type="number" min="1" max="240" value="120" required></label>
+        <div class="connection-actions"><button id="connect" type="submit" class="primary">连接设备</button><button id="disconnect" type="button" disabled>断开</button></div>
+      </form>
+      <p class="hint">人体 ID 需与发送端一致；接收到真实数据后才显示「数据在线」。</p>
+      <p id="notice" class="notice" role="status">等待连接设备。</p>
+      <p id="error" class="error" role="alert" hidden></p>
+    </section>
+    <section class="metrics" aria-label="实时统计">
+      <div class="metric"><span>骨骼流</span><strong id="skeleton-count">0</strong><small id="skeleton-summary">0 个骨骼关节 · 原始 / 重定向独立计流</small></div>
+      <div class="metric"><span>刚体</span><strong id="rigid-count">0</strong><small>ID 小于 300 · 位置与旋转四元数</small></div>
+      <div class="metric"><span>标记点</span><strong id="marker-count">0</strong><small>最近一组接收数据</small></div>
+      <div class="metric"><span>接收事件 / 秒</span><strong id="rate">0</strong><small id="event-total">累计 0 · 丢弃 0</small></div>
+    </section>
+    <section class="workspace">
+      <div class="panel preview">
+        <div class="section-heading"><div><h2>空间预览</h2><p class="hint">左拖旋转 · Shift + 左拖 / 右拖平移 · 滚轮缩放</p></div><div class="view-actions"><button id="freeze" type="button" aria-pressed="false" disabled>冻结帧</button><button id="fit" type="button">适配视图</button></div></div>
+        <div id="freeze-status" class="freeze-status" role="status">实时显示</div>
+        <div class="skeleton-controls"><label for="skeleton-view">骨骼显示</label><select id="skeleton-view"><option value="auto">自动（关节流优先）</option><option value="joints">关节流（S ID）</option><option value="source">源骨骼</option></select><label class="rigid-toggle"><input id="show-rigids" type="checkbox" checked>显示刚体</label><span id="skeleton-source">数值表保留所有流</span></div>
+        <div class="canvas-wrap"><canvas id="scene" tabindex="0" aria-label="三维动作预览，左拖旋转，Shift加左拖或右拖平移，滚轮缩放；方向键旋转，Shift加方向键平移，加减号缩放，F 适配视图"></canvas><div id="empty-preview" class="empty-preview"><span aria-hidden="true">＋</span><strong>等待空间数据</strong><p>连接后显示全局骨骼、刚体和标记点</p></div><div class="scene-badge">3D VIEW <span>原始 SDK 坐标 · Y 轴向上</span></div></div>
+        <div class="legend"><span><i class="skeleton-dot"></i>骨骼 S · ID ≥ 300</span><span><i class="rigid-dot"></i>刚体 R · RGB 轴</span><span><i class="marker-dot"></i>标记点</span><span><i class="stale-dot"></i>过期 / 缓存</span></div>
+        <p class="preview-note">手部按同一模型的手腕与手指节序连线，其他骨骼沿用原始层级。局部坐标仅在数值表中显示；超过 2 秒无更新标为过期。</p>
+      </div>
+      <aside class="panel recording" aria-labelledby="record-heading">
+        <div class="section-heading"><h2 id="record-heading">采集记录</h2><span id="record-badge" class="pill">未录制</span></div>
+        <div class="record-counter"><strong id="record-events">0</strong><span>已记录事件</span></div>
+        <p id="record-name" class="hint">连接后可开始本地录制</p>
+        <div class="record-actions"><button id="record-start" class="primary" disabled>开始录制</button><button id="record-stop" disabled>停止录制</button></div>
+        <p class="record-note">SDK 轮询读取最新帧，不保证逐帧无损。JSONL 保留完整事件；CSV 展开为数值行。</p>
+        <div class="section-heading history-heading"><h3>已完成记录</h3><span>下载导出</span></div>
+        <ul id="recordings" class="recordings"><li class="empty-history">暂无记录</li></ul>
+      </aside>
+    </section>
+    <section id="hand-skin-panel" class="panel hand-skin" aria-labelledby="skin-heading">
+      <div class="section-heading"><div><h2 id="skin-heading">个人手部蒙皮 · 毫米 mm</h2><p id="skin-profile-name" class="hint">尚未载入个人手型</p></div><span id="skin-state" class="pill" role="status">正在读取状态</span></div>
+      <p class="hint">使用保存的三姿态标定拟合共同手型，蓝色由骨骼独立驱动，黄色由手背标记点独立驱动。表面、厚度与指尖均为模型估计，并非扫描或真实距离误差验证。</p>
+      <div class="skin-toolbar"><label>个人标定档案<select id="skin-profiles"><option value="">选择已保存标定档案</option></select></label><button id="skin-refresh" type="button">刷新档案</button><button id="skin-calibrate" type="button" class="primary" disabled>拟合手型并启动</button><button id="skin-pause" type="button" disabled>恢复姿态求解</button><a id="skin-export" href="/api/hands/export" download hidden>导出当前模型与指尖 JSON</a></div>
+      <div class="skin-toolbar skin-view-controls"><label>驱动显示<select id="skin-mode"><option value="both">同时比较</option><option value="skeleton">蓝色 · 骨骼驱动</option><option value="markers">黄色 · 标记点驱动</option></select></label><label class="skin-check"><input id="skin-left" type="checkbox" checked>左手</label><label class="skin-check"><input id="skin-right" type="checkbox" checked>右手</label><button id="skin-freeze" type="button" aria-pressed="false" disabled>冻结蒙皮画面</button><button id="skin-fit" type="button">适配蒙皮视图</button></div>
+      <div class="skin-viewport"><canvas id="skin-canvas" tabindex="0" aria-label="个人手部三维蒙皮。左拖旋转，Shift加左拖或右拖平移，滚轮缩放。方向键旋转，Shift加方向键平移，加减号缩放，F适配视图。"></canvas><div id="skin-empty" class="skin-empty">等待模型数据</div><span class="skin-view-label">MANO / 估计表面 · mm</span></div>
+      <div class="skin-legend"><span><i class="skin-blue"></i>骨骼驱动</span><span><i class="skin-yellow"></i>标记点驱动</span><span><i class="skin-gray"></i>无效 / 过期</span><span>左拖旋转 · Shift + 左拖 / 右拖平移 · 滚轮缩放</span></div>
+      <p id="skin-message" class="notice" role="status">请选择已保存的个人标定档案。</p>
+      <div class="table-scroll"><table class="skin-frame-table"><thead><tr><th>手侧 / 方法</th><th>显示状态</th><th>源数据年龄</th><th>求解耗时</th><th>拟合残差（非真实误差）</th><th>输入提示</th></tr></thead><tbody id="skin-frame-rows"><tr><td colspan="6">暂无拟合结果</td></tr></tbody></table></div>
+      <p class="hint">标记点时间代表内容更新时间，不能区分静止与缓存；超过 2 秒或输入失效显示灰色。冻结只锁定本面板画面；导出始终包含后台当前结果与源时间。</p>
+      <details id="skin-quality" hidden><summary>手型拟合诊断</summary><pre id="skin-quality-text"></pre></details>
+    </section>
+    <section class="panel calibration" aria-labelledby="cal-heading">
+      <div class="section-heading"><h2 id="cal-heading">个人手部标定 · 毫米 mm</h2><span class="pill">标定数据 · 待手型与姿态拟合</span></div>
+      <p class="hint">为同一受试者的蓝色骨骼与黄色标记点对比准备数据。当前仅保存实测尺寸、人工对应与原始姿态，不生成手部模型；部分对应也可保存为草稿。</p>
+      <label class="cal-name">受试者名称<input id="cal-name" maxlength="80" placeholder="输入名称，不会自动保存" autocomplete="off"></label>
+      <details><summary>实测尺寸（可选，全部为 mm）</summary><div class="cal-measurements">
+        <fieldset><legend>左手</legend><label>掌宽<input id="cal-left-palm_width" type="number" min="0.01" step="any"></label><label>掌厚<input id="cal-left-palm_thickness" type="number" min="0.01" step="any"></label><label>手长<input id="cal-left-hand_length" type="number" min="0.01" step="any"></label><label>标记球半径<input id="cal-left-marker_radius" type="number" min="0" step="any"></label><label>底座厚度<input id="cal-left-marker_base_thickness" type="number" min="0" step="any"></label></fieldset>
+        <fieldset><legend>右手</legend><label>掌宽<input id="cal-right-palm_width" type="number" min="0.01" step="any"></label><label>掌厚<input id="cal-right-palm_thickness" type="number" min="0.01" step="any"></label><label>手长<input id="cal-right-hand_length" type="number" min="0.01" step="any"></label><label>标记球半径<input id="cal-right-marker_radius" type="number" min="0" step="any"></label><label>底座厚度<input id="cal-right-marker_base_thickness" type="number" min="0" step="any"></label></fieldset>
+      </div></details>
+      <div class="cal-columns">
+        <div><h3>1 · 人工确认标记点对应</h3><p class="hint">冻结最新帧后，在上方预览点击黄点或选择 ID。各指节 1 靠近手掌，依次向外，4 为指尖；按实际贴点位置确认，不按 ID 推断手侧。</p>
+          <div class="cal-actions"><button id="cal-snapshot" type="button">冻结最新帧并标注</button><button id="cal-map-end" type="button" disabled>结束标注</button></div>
+          <div class="cal-mapping-fields"><label>标记点<select id="cal-marker"><option value="">先冻结标注</option></select></label><label>手侧<select id="cal-side"><option value="left">左手</option><option value="right">右手</option></select></label><label>解剖位置<select id="cal-landmark"></select></label><button id="cal-map-add" type="button" disabled>确认对应</button></div>
+          <ul id="cal-mappings" class="cal-list" aria-label="已确认对应"></ul>
+        </div>
+        <div><h3>2 · 采集本人姿态</h3><p class="hint">每组约 2 秒 / 10 Hz，最多 20 个非重复帧、9 组姿态。采集会恢复实时预览，使用实时数据；标记丢失、断连或 SDK 异常会中止本组。</p>
+          <div class="cal-actions"><label>姿态<select id="cal-pose"><option value="open">张手</option><option value="together">并指</option><option value="bent">弯指</option></select></label><button id="cal-capture" type="button" class="primary">恢复实时并采集 2 秒</button></div>
+          <label class="cal-check"><input id="cal-observed" type="checkbox">我已观察到本人当前姿态及对应标记点</label>
+          <p class="hint">标记时间仅代表内容变化，静止与缓存无法区分。保留原始时间与过期状态；蓝黄数据并非硬件同步。静止黄点仍可能采入，需人工观察确认。</p>
+          <ul id="cal-samples" class="cal-list" aria-label="已采集姿态"></ul>
+        </div>
+      </div>
+      <div class="cal-storage"><div class="cal-actions"><button id="cal-save" type="button" class="primary">保存标定草稿</button><button id="cal-refresh" type="button">刷新档案列表</button><select id="cal-profiles" aria-label="已保存标定档案"><option value="">选择已保存档案</option></select><button id="cal-load" type="button">加载所选档案</button><a id="cal-export" download hidden>导出已保存 JSON</a></div><label class="cal-check"><input id="cal-replace" type="checkbox">加载时允许替换当前未保存草稿</label></div>
+      <p id="cal-summary" class="hint"></p><p id="cal-message" class="notice" role="status">先填写名称，确认标记点对应，再采集张手、并指和弯指姿态。</p>
+    </section>
+    <section class="panel values" aria-labelledby="values-heading">
+      <div class="section-heading"><div><h2 id="values-heading">样本数值</h2><p class="hint">SDK 原值，不转换单位。四元数：x, y, z, w。所有流独立保留，可按来源筛选。</p></div><label class="filter-label">显示<select id="data-filter"><option value="all">全部数据</option><option value="source">原始骨骼</option><option value="retarget">重定向骨骼</option><option value="skeleton_joint">骨骼关节（S ID）</option><option value="rigid">刚体</option><option value="markers">标记点</option></select></label></div>
+      <div class="table-scroll"><table><thead><tr><th>类型 / ID</th><th>关节</th><th>帧号</th><th>坐标空间</th><th>X</th><th>Y</th><th>Z</th><th>Qx</th><th>Qy</th><th>Qz</th><th>Qw</th><th>状态</th></tr></thead><tbody id="data-rows"><tr><td colspan="12" class="empty-table">暂无接收数据</td></tr></tbody></table></div>
+      <div class="table-footer"><span id="rows-summary">0 行</span><span id="last-received">尚未收到数据</span></div>
+      <p class="marker-note">标记点时间为内容更新时间，静止与断流无法单独区分。</p>
+    </section>
+    <footer>CMAvatar · 本地 SDK 接收服务 <span>仅刷新可见区域 · 预览目标 60 Hz · 数值表 4 Hz · 采集独立运行</span></footer>
+  </main>
+</body>
+</html>

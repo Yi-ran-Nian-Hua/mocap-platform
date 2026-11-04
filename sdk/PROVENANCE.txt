@@ -1,0 +1,9 @@
+CMVrpn.dll - unmodified upstream vendor SDK
+Repository: https://github.com/ChingMuVisionTech/ChingMuPythonSDKs
+Commit: 8d4ed624f204689e29d90813466e53d512f7fc94
+Path: ChingmuDLL/CMVrpn.dll
+Bytes: 3087872
+Git blob SHA-1: b101edabdfe8efb828cc7efdf20e14a4b7faa01d
+SHA-256: c206fbb391579ec0a73a396439108b2f67f177956fa0792d0806bc2e5b220b17
+Downloaded: 2026-11-04
+No LICENSE file was present in the upstream tree. Copyright remains with its owner.
