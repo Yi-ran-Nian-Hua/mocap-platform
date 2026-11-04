@@ -1,0 +1,3 @@
+# Preserve original capture and calibration bytes across platforms.
+recordings/** -text whitespace=cr-at-eol
+sdk/*.dll binary

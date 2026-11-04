@@ -10,5 +10,5 @@ models/
 tracker_log.txt
 *.log
 *.zip
-# Install the upstream vendor binary locally; it is not application source.
+# Additional vendor binaries remain ignored; approved files are tracked explicitly.
 sdk/*.dll

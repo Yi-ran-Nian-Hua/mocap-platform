@@ -4,7 +4,7 @@
 
 ## 启动
 
-GitHub 源码仓库不包含厂商 DLL、MANO 模型或个人采集数据。首次克隆后，从[上游固定版本的 CMVrpn.dll](https://github.com/ChingMuVisionTech/ChingMuPythonSDKs/blob/8d4ed624f204689e29d90813466e53d512f7fc94/ChingmuDLL/CMVrpn.dll) 下载原始文件，放到 `sdk/CMVrpn.dll`；来源和校验值见 `sdk/PROVENANCE.txt`。MANO 皮肤预览另需按下文准备模型。
+仓库包含 `sdk/CMVrpn.dll` 和经项目所有者确认公开的现有采集记录、个人标定及拟合档案。DLL 的[上游固定版本](https://github.com/ChingMuVisionTech/ChingMuPythonSDKs/blob/8d4ed624f204689e29d90813466e53d512f7fc94/ChingmuDLL/CMVrpn.dll)、来源和校验值见 `sdk/PROVENANCE.txt`；原厂版权及许可不变。MANO 模型文件仍保留在本地，不随仓库分发；皮肤预览需按下文准备模型。后续新增采集文件仍默认被 Git 忽略，已有受跟踪档案的修改会显示在 Git 状态中。
 
 1. 在 Windows 64 位系统安装 Python 3.10 或更新的 64 位版本。
 2. 双击 `start.bat`，浏览器打开 `http://127.0.0.1:8765`。
